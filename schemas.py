@@ -1,12 +1,14 @@
 from flask_marshmallow import Marshmallow
+from marshmallow import fields, validates, ValidationError
 from models import User, Product, Order, OrderItem, Comment, Category
-from validators import validate_password, validate_phone
+from validators import validate_password, validate_phone, validate_email
+
 
 ma = Marshmallow()
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
-    password = ma.String(load_only=True)
-
+    password = fields.String(load_only=True, validate=validate_password)
+    email = fields.Email(validate=validate_email)
     class Meta:
         model = User
         load_instance = True

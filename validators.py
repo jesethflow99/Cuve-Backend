@@ -14,3 +14,7 @@ def validate_password(password):
 def validate_phone(phone):
     if not re.match(r"^\+?\d{10,15}$", phone):
         raise ValidationError("El número de teléfono no es válido.")
+    
+def validate_email(email):
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        raise ValidationError("El correo electrónico no es válido.")

@@ -1,4 +1,6 @@
+from datetime import timedelta
 import os
+
 
 class Config:
     DEBUG = False
@@ -6,6 +8,8 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'default_secret_key')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET = os.getenv('JWT_SECRET')
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)  # 1 hour
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)  # 7 days
     
 class Development(Config):
     DEBUG = True
