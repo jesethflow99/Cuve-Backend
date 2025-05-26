@@ -13,6 +13,8 @@ def create_superuser():
     username = os.getenv("SUPERUSER_USERNAME")
     password = os.getenv("SUPERUSER_PASSWORD")
     role = os.getenv("ADMIN_ROLE")
+    phone = os.getenv("SUPERUSER_PHONE")
+    address = os.getenv("SUPERUSER_ADDRESS")
 
     if not all([email, username, password]):
         logger.error("Faltan variables de entorno para crear el superusuario.")
@@ -27,7 +29,10 @@ def create_superuser():
         username=username,
         email=email,
         password=generate_password_hash(password),
-        role=role
+        role=role,
+        phone=phone,
+        address=address,
+        
     )
     db.session.add(new_superuser)
     db.session.commit()

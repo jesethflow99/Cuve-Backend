@@ -19,7 +19,16 @@ class ProductSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Product
         load_instance = True
-        include_fk = True
+
+    @validates('price')
+    def validate_price(self, value):
+        if value < 0:
+            raise ValidationError("Price must be a positive number.")
+
+    @validates('stock')
+    def validate_stock(self, value):
+        if value < 0:
+            raise ValidationError("Stock must be a positive number.")
 
 class OrderItemSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

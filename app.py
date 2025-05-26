@@ -17,6 +17,8 @@ def load_blueprints(app):
         dir_path = f'blueprints/{filename}'
         if not os.path.isdir(dir_path):
             continue
+        if filename == "__pycache__":
+            continue
         import_path = f'blueprints.{filename}.routes'
         try:
             module = import_module(import_path)

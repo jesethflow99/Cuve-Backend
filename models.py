@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 import os
+from random import randint
 
 db = SQLAlchemy()
 
@@ -21,6 +22,8 @@ class User(ModelBase):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    address = db.Column(db.String(256), nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     role = db.Column(db.String, default=Roles.USER)
     
@@ -31,6 +34,8 @@ class Product(ModelBase):
     description = db.Column(db.Text, nullable=True)
     price = db.Column(db.Float, nullable=False)
     stock = db.Column(db.Integer, default=0)
+    image_url = db.Column(db.String(256), nullable=True)
+    id_code = db.Column(db.String(80), unique=True, nullable=False, default=lambda: f"PROD-{randint(1000, 9999)}")
     is_active = db.Column(db.Boolean, default=True)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     category = db.relationship('Category', backref=db.backref('products', lazy=True))
@@ -49,7 +54,6 @@ class Order(ModelBase):
     __tablename__ = 'orders'
     
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    total_amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(50), default='pending')
     
     user = db.relationship('User', backref=db.backref('orders', lazy=True))

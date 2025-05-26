@@ -1,8 +1,8 @@
-"""primera migracion
+"""primer migrate
 
-Revision ID: 8ade4cea52c1
+Revision ID: 368158397465
 Revises: 
-Create Date: 2025-05-24 11:05:27.073761
+Create Date: 2025-05-25 16:23:27.953425
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8ade4cea52c1'
+revision = '368158397465'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -31,8 +31,10 @@ def upgrade():
     sa.Column('username', sa.String(length=80), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('password', sa.String(length=256), nullable=False),
+    sa.Column('phone', sa.String(length=20), nullable=True),
+    sa.Column('address', sa.String(length=256), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('role', sa.Enum('USER', 'ADMIN', 'MODERATOR', name='rolesenum'), nullable=True),
+    sa.Column('role', sa.String(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
@@ -55,13 +57,16 @@ def upgrade():
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('price', sa.Float(), nullable=False),
     sa.Column('stock', sa.Integer(), nullable=True),
+    sa.Column('image_url', sa.String(length=256), nullable=True),
+    sa.Column('id_code', sa.String(length=80), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('category_id', sa.Integer(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
     sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('id_code')
     )
     op.create_table('comments',
     sa.Column('product_id', sa.Integer(), nullable=False),

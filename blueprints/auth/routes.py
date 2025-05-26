@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect, url_for
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from werkzeug.security import generate_password_hash, check_password_hash
 from schemas import UserSchema
@@ -36,18 +36,24 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-    username = data.get('username')
+    email = data.get('email')
     password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
+    user = User.query.filter_by(email=email).first()
 
     if not user or not check_password_hash(user.password, password):
-        logger.error("Invalid username or password")
-        # logger.error(f"Invalid username or password for user: {username}")
-        return jsonify({"msg": "Bad username or password"}), 401
+        logger.error("Invalid email or password")
+        # logger.error(f"Invalid email or password for user: {email}")
+        return jsonify({"msg": "Bad email or password"}), 401
+    
+    if not user.is_active:
+        logger.error("User account is inactive")
+        
+        return jsonify({"msg": "User account is inactive, contact to admin for activate"}), 403
 
     access_token = create_access_token(identity=str(user.id))
     return jsonify(access_token=access_token)
+
 
 @auth_bp.route('/update', methods=['PATCH'])
 @jwt_required()
@@ -56,20 +62,43 @@ def update_user():
     data = request.get_json()
     user_id = data.get('id', current_user_id)  # Si no se pasa user_id, se usa el propio
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
+
+
     if not user:
         logger.error("User not found")
         return jsonify({"msg": "User not found"}), 404
 
-    current_user = User.query.get(current_user_id)
+    current_user = db.session.get(User, current_user_id)
     # Solo admin puede modificar a otros usuarios
     if str(user.id) != str(current_user_id) and current_user.role != Roles.ADMIN:
         logger.error("Permission denied")
         return jsonify({"msg": "Permission denied"}), 403
-    #no se puede modificar el rol de admin con id 1
-    if user.role == Roles.ADMIN and str(user.id) == '1':
-        logger.error("Cannot modify admin user")
-        return jsonify({"msg": "Cannot modify admin user"}), 403
+    
+    #ningun usuario puede moficicar ni el id ni el rol
+    if 'role' in data and current_user.role != Roles.ADMIN:
+        logger.error("Permission denied to change role")
+        return jsonify({"msg": "Permission denied to change role"}), 403
+    if 'id' in data:
+        logger.error("Permission denied to change id")
+        return jsonify({"msg": "Permission denied to change id"}), 403
+    
+    #if is active is disabled, redirect to method logout
+    if 'is_active' in data and not data['is_active']:
+        user.is_active = False
+        db.session.commit()
+        logger.info(f"User {user.username} deactivated their account")
+        
+        # Invalidar el token actual (si usas un sistema de blacklist)
+        jti = get_jwt_identity()  # Obtener el identificador del token actual
+        
+        
+        # Aquí podrías agregar el jti a una blacklist si tienes un sistema implementado
+        
+        
+        return jsonify({"msg": "Account deactivated. You have been logged out."}), 200
+
+    
 
     user_schema = UserSchema(partial=True)
     errors = user_schema.validate(data)
@@ -89,35 +118,13 @@ def update_user():
     logger.info(f"User {user.username} updated successfully")
     return jsonify(user_schema.dump(user)), 200
 
-@auth_bp.route('/delete/<int:id>', methods=['DELETE'])
-@jwt_required()
-def delete_user(id):
-    user_id = get_jwt_identity()
-    user = User.query.get(user_id)
-    # Solo admin puede eliminar a otros usuarios
-    if str(user.id) != str(user_id) and user.role != Roles.ADMIN:
-        logger.error("Permission denied")
-        return jsonify({"msg": "Permission denied"}), 403
-    
-    user = User.query.get(id)
-    if not user:
-        logger.error("User not found")
-        return jsonify({"msg": "User not found"}), 404 
-    if user.role == Roles.ADMIN:
-        logger.error("Cannot delete admin user")
-        return jsonify({"msg": "Cannot delete admin user"}), 403 
 
-    # Eliminar el usuario
-    db.session.delete(user)
-    db.session.commit()
-    logger.info(f"User {user.username} deleted successfully")
-    return jsonify({"msg": "User deleted"}), 200
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def get_current_user():
     current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
+    user = db.session.get(User, current_user_id)
     if not user:
         logger.error("User not found")
         return jsonify({"msg": "User not found"}), 404
@@ -133,36 +140,5 @@ def logout():
     # Here you would typically add the jti to a blacklist
     return jsonify({"msg": "Successfully logged out"}), 200
 
-@auth_bp.route('/get_user/<int:id>', methods=['GET'])
-@jwt_required()
-def get_user(id):
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    # Solo admin puede ver a otros usuarios
-    if str(user.id) != str(current_user_id) and user.role != Roles.ADMIN:
-        logger.error("Permission denied")
-        return jsonify({"msg": "Permission denied"}), 403
-
-    user = User.query.get(id)
-    if not user:
-        logger.error("User not found")
-        return jsonify({"msg": "User not found"}), 404
-
-    user_schema = UserSchema()
-    return jsonify(user_schema.dump(user)), 200
-
-@auth_bp.route('/get_all_users', methods=['GET'])
-@jwt_required()
-def get_all_users():
-    current_user_id = get_jwt_identity()
-    user = User.query.get(current_user_id)
-    # Solo admin puede ver a otros usuarios
-    if str(user.id) != str(current_user_id) and user.role != Roles.ADMIN:
-        logger.error("Permission denied")
-        return jsonify({"msg": "Permission denied"}), 403
-
-    users = User.query.all()
-    user_schema = UserSchema(many=True)
-    return jsonify(user_schema.dump(users)), 200
 
 blueprint = auth_bp
