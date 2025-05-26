@@ -22,7 +22,7 @@ def app():
             username="testuser",
             email="testuser@example.com",
             password=generate_password_hash("Hashedpassword123"),
-            phone="12343453",
+            phone="+556231254876",
             address="av.state 532"
         )
         db.session.add(user)
@@ -49,7 +49,7 @@ def test_register(client):
         "username": "newuser",
         "email": "newuser@example.com",
         "password": "Password123",
-        "phone": "12343453",
+        "phone": "+2123456789",
         "address":"av.state 532"
     })
 

@@ -18,3 +18,11 @@ def validate_phone(phone):
 def validate_email(email):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise ValidationError("El correo electrónico no es válido.")
+    
+def validate_price(price):
+    if price <= 0:
+        raise ValidationError("El precio debe ser un número positivo.")
+    
+def validate_stock(stock):
+    if stock < 0:
+        raise ValidationError("El stock no puede ser negativo.")

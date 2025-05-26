@@ -74,7 +74,6 @@ def app():
         db.session.add_all([user, admin_user, seller_user, product1, product2, comment])
         db.session.commit()
         
-        db.session.commit()
     yield app
     with app.app_context():
         db.session.remove()
@@ -111,8 +110,8 @@ def test_test(client):
 
 def test_get_products(client, user_access_token):
     headers = {'Authorization': f'Bearer {user_access_token}'}
-    response = client.get('/products', headers=headers)
+    response = client.get('/products/products', headers=headers)
     assert response.status_code == 200
-    assert all('id_code' in product for product in response.json)
+    assert all('description' in product for product in response.json)
     assert all('image_url' in product for product in response.json)
     assert all('category_id' in product for product in response.json)

@@ -1,7 +1,7 @@
 from flask_marshmallow import Marshmallow
-from marshmallow import fields, validates, ValidationError
+from marshmallow import fields, ValidationError
 from models import User, Product, Order, OrderItem, Comment, Category
-from validators import validate_password, validate_phone, validate_email
+from validators import validate_password, validate_phone, validate_email,validate_price, validate_stock
 
 
 ma = Marshmallow()
@@ -9,6 +9,7 @@ ma = Marshmallow()
 class UserSchema(ma.SQLAlchemyAutoSchema):
     password = fields.String(load_only=True, validate=validate_password)
     email = fields.Email(validate=validate_email)
+    phone = fields.String(validate=validate_phone)
     class Meta:
         model = User
         load_instance = True
@@ -16,19 +17,14 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         
 
 class ProductSchema(ma.SQLAlchemyAutoSchema):
+    price = fields.Float(required=True, validate=validate_price) 
+    stock = fields.Integer(required=True, validate=validate_stock)
     class Meta:
         model = Product
         load_instance = True
+        include_fk = True
 
-    @validates('price')
-    def validate_price(self, value):
-        if value < 0:
-            raise ValidationError("Price must be a positive number.")
 
-    @validates('stock')
-    def validate_stock(self, value):
-        if value < 0:
-            raise ValidationError("Stock must be a positive number.")
 
 class OrderItemSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

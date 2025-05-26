@@ -19,7 +19,7 @@ def app():
             username="testuser",
             email="testuser@example.com",
             password=generate_password_hash("Hashedpassword123"),
-            phone="12343453",
+            phone="+556321547868",
             address="av.state 532",
             role=Roles.ADMIN
         )
@@ -60,7 +60,7 @@ def test_delete(client,access_token):
         "username": "newuser",
         "email": "newuser@example.com",
         "password": "Password123",
-        "phone": "12343453",
+        "phone": "+352123456789",
         "address":"av.state 532"
     })
   response = client.delete("/admin/delete/2",headers={"Authorization":f"Bearer {access_token}"})

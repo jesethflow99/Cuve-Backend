@@ -1,14 +1,20 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from models import Product, db,Order,OrderItem
+from models import Product, db,Order,OrderItem,User,Roles
 from schemas import ProductSchema
 from flask_jwt_extended import get_jwt_identity
+
 
 product_bp = Blueprint('products', __name__)
 
 
 def has_role(required_roles):
-    user_roles = get_jwt_identity().get('roles', [])
+    user_id = get_jwt_identity()
+    user = db.session.get(User, user_id)
+    if not user:
+        return False
+    user_roles = user.role if isinstance(user.role, list) else [user.role]
+    
     return any(role in required_roles for role in user_roles)
 
 # Endpoint test
@@ -36,28 +42,33 @@ def get_product(product_id):
 @jwt_required()
 def create_product():
   # if is admin or seller
-  if not has_role(['admin', 'seller']):
-    return jsonify({"msg": "Access forbidden"}), 403
-  
-  product_schema = ProductSchema()
-  data = request.get_json()
+  try:
+    if not has_role([Roles.ADMIN, Roles.SELLER]):
+      return jsonify({"msg": "Access forbidden"}), 403
+    
+    product_schema = ProductSchema()
+    data = request.get_json()
 
-  errors = product_schema.validate(data)
-  if errors:
-      return jsonify(errors), 400
+    errors = product_schema.validate(data)
+    if errors:
+        return jsonify(errors), 400
 
-  product = product_schema.load(data)
-  db.session.add(product)
-  db.session.commit()
+    product = product_schema.load(data)
+    db.session.add(product)
+    db.session.commit()
 
-  return jsonify(product_schema.dump(product)), 201
+    return jsonify(product_schema.dump(product)), 201
+  except Exception as e:
+    db.session.rollback()
+    
+    return jsonify({"msg": "Error creating product", "error": str(e)}), 500
   
 # Update an existing product
 @product_bp.route('/products/<int:product_id>', methods=['PATCH'])
 @jwt_required()
 def update_product(product_id):
   
-  if not has_role(['admin', 'seller']):
+  if not has_role([Roles.ADMIN, Roles.SELLER]):
     return jsonify({"msg": "Access forbidden"}), 403
   
   product = Product.query.get_or_404(product_id)
@@ -78,7 +89,7 @@ def update_product(product_id):
 @jwt_required()
 def delete_product(product_id):
   
-  if not any(role in ['admin', 'seller'] for role in get_jwt_identity().get('roles', [])):
+  if not any(role in [Roles.ADMIN, Roles.SELLER] for role in get_jwt_identity().get('roles', [])):
     return jsonify({"msg": "Access forbidden"}), 403
   
   product = Product.query.get_or_404(product_id)

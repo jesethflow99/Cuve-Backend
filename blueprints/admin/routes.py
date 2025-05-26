@@ -10,7 +10,7 @@ from functools import wraps
 
 
 
-admin_bp = Blueprint('users', __name__)
+admin_bp = Blueprint('admin', __name__)
 
 logger = setup_logger(__name__)
 def has_role(required_roles):
