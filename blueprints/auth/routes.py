@@ -133,6 +133,7 @@ def update_user():
 def get_current_user():
     current_user_id = get_jwt_identity()
     user = db.session.get(User, current_user_id)
+    print(current_user_id)
     if not user:
         logger.error("User not found")
         return jsonify({"msg": "User not found"}), 404

@@ -53,11 +53,16 @@ def get_products_by_category(category):
 @product_bp.route('/orders/<int:id_user>', methods=['GET'])
 @jwt_required()
 def get_orders_by_user(id_user):
-  order = Order.query.filter_by(user_id=id_user).first()
-  if not order:
-    return jsonify({"msg": "No orders found for this user"}), 404
-  order_items = OrderItem.query.filter_by(order_id=order.id).all()
-  order_item_schema = OrderItemSchema(many=True)
+    order = Order.query.filter_by(user_id=id_user).first()
+    if not order:
+        return jsonify({"msg": "No orders found for this user"}), 404
+    order_items = OrderItem.query.filter_by(order_id=order.id).all()
+    order_item_schema = OrderItemSchema(many=True)
+    return jsonify({
+        "order_id": order.id,
+        "user_id": order.user_id,
+        "items": order_item_schema.dump(order_items)
+    }), 200
     
 
 # Create a new product
