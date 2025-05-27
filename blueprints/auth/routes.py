@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from schemas import UserSchema
 from models import db, User,Roles
 from logger import setup_logger
+from marshmallow import ValidationError
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -21,7 +22,9 @@ def register():
     errors = user_schema.validate(data)
     if errors:
         logger.error(f"Validation errors: {errors}")
+
         return jsonify(errors), 400
+
 
     # Hashear la contraseña antes de cargar el modelo
     data['password'] = generate_password_hash(data['password'])
@@ -38,21 +41,26 @@ def login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
+    try:
 
-    user = User.query.filter_by(email=email).first()
+        user = User.query.filter_by(email=email).first()
 
-    if not user or not check_password_hash(user.password, password):
-        logger.error("Invalid email or password")
-        # logger.error(f"Invalid email or password for user: {email}")
-        return jsonify({"msg": "Bad email or password"}), 401
-    
-    if not user.is_active:
-        logger.error("User account is inactive")
+        if not user or not check_password_hash(user.password, password):
+            logger.error("Invalid email or password")
+            # logger.error(f"Invalid email or password for user: {email}")
+            return jsonify({"msg": "Nombre o contraseña incorrectos"}), 401
         
-        return jsonify({"msg": "User account is inactive, contact to admin for activate"}), 403
+        if not user.is_active:
+            logger.error("User account is inactive")
+            
+            return jsonify({"msg": "User account is inactive, contact to admin for activate"}), 403
 
-    access_token = create_access_token(identity=str(user.id))
-    return jsonify(access_token=access_token)
+        access_token = create_access_token(identity=str(user.id))
+        return jsonify(access_token=access_token)
+    except Exception as e:
+        logger.error(f"Error during login: {str(e)}")
+        return jsonify({"msg": "Error during login"}), 500
+    
 
 
 @auth_bp.route('/update', methods=['PATCH'])
@@ -130,6 +138,7 @@ def get_current_user():
         return jsonify({"msg": "User not found"}), 404
 
     user_schema = UserSchema()
+    
     return jsonify(user_schema.dump(user)), 200
 
 @auth_bp.route('/logout', methods=['POST'])

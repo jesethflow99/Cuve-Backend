@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from models import Product, db,Order,OrderItem,User,Roles
+from models import Product, db,Order,OrderItem,User,Roles, OrderItemSchema
 from schemas import ProductSchema
 from flask_jwt_extended import get_jwt_identity
 
@@ -36,6 +36,29 @@ def get_product(product_id):
     product = Product.query.get_or_404(product_id)
     product_schema = ProductSchema()
     return jsonify(product_schema.dump(product)), 200
+
+#get products by category
+@product_bp.route('/products/category/<string:category>', methods=['GET'])
+@jwt_required()
+def get_products_by_category(category):
+    products = Product.query.filter_by(category=category).all()
+    product_schema = ProductSchema(many=True)
+    
+    if not products:
+        return jsonify({"msg": "No products found in this category"}), 404
+    
+    return jsonify(product_schema.dump(products)), 200
+  
+# get orders by user as cart
+@product_bp.route('/orders/<int:id_user>', methods=['GET'])
+@jwt_required()
+def get_orders_by_user(id_user):
+  order = Order.query.filter_by(user_id=id_user).first()
+  if not order:
+    return jsonify({"msg": "No orders found for this user"}), 404
+  order_items = OrderItem.query.filter_by(order_id=order.id).all()
+  order_item_schema = OrderItemSchema(many=True)
+    
 
 # Create a new product
 @product_bp.route('/products', methods=['POST'])

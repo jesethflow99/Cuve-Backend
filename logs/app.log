@@ -9,3 +9,11 @@
 2025-05-26 02:20:35,470 - app - ERROR - Could not import blueprints.__pycache__.routes: No module named 'blueprints.__pycache__.routes'
 2025-05-26 02:21:02,327 - app - ERROR - Could not import blueprints.__pycache__.routes: No module named 'blueprints.__pycache__.routes'
 2025-05-26 02:21:05,351 - app - ERROR - Could not import blueprints.__pycache__.routes: No module named 'blueprints.__pycache__.routes'
+2025-05-26 22:07:04,664 - app - ERROR - Could not import blueprints.auth.routes: cannot import name 'UserSchema' from partially initialized module 'schemas' (most likely due to a circular import) (D:\ecommerce-backend\schemas.py)
+2025-05-26 22:07:04,680 - app - ERROR - Could not import blueprints.products.routes: cannot import name 'UserSchema' from partially initialized module 'schemas' (most likely due to a circular import) (D:\ecommerce-backend\schemas.py)
+2025-05-26 22:07:04,680 - app - ERROR - Could not import blueprints.admin.routes: cannot import name 'UserSchema' from partially initialized module 'schemas' (most likely due to a circular import) (D:\ecommerce-backend\schemas.py)
+2025-05-26 22:07:06,793 - app - ERROR - Could not import blueprints.auth.routes: cannot import name 'UserSchema' from partially initialized module 'schemas' (most likely due to a circular import) (D:\ecommerce-backend\schemas.py)
+2025-05-26 22:07:06,795 - app - ERROR - Could not import blueprints.products.routes: cannot import name 'UserSchema' from partially initialized module 'schemas' (most likely due to a circular import) (D:\ecommerce-backend\schemas.py)
+2025-05-26 22:07:06,796 - app - ERROR - Could not import blueprints.admin.routes: cannot import name 'UserSchema' from partially initialized module 'schemas' (most likely due to a circular import) (D:\ecommerce-backend\schemas.py)
+2025-05-27 00:47:53,119 - app - ERROR - Could not import blueprints.products.routes: cannot import name 'OrderItemSchema' from 'models' (D:\ecommerce-backend\models.py)
+2025-05-27 00:47:55,561 - app - ERROR - Could not import blueprints.products.routes: cannot import name 'OrderItemSchema' from 'models' (D:\ecommerce-backend\models.py)
