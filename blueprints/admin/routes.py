@@ -60,7 +60,43 @@ def get_all_users():
     user_schema = UserSchema(many=True)
     return jsonify(user_schema.dump(users)), 200
   
-  
+@admin_bp.route('/change_role/<int:id>', methods=['PATCH'])
+@jwt_required()
+@role_required(Roles.ADMIN)
+def change_user_role(id):
+    current_user_id = get_jwt_identity()
+    user = db.session.get(User, id)
+
+    if not user:
+        logger.error("User not found")
+        return jsonify({"msg": "User not found"}), 404
+
+    # Proteger al superadministrador
+    if user.id == 1:
+        logger.error("Cannot change the role of the superadmin user")
+        return jsonify({"msg": "Cannot change the role of the superadmin user"}), 403
+
+    data = request.get_json()
+    new_role = data.get('role')
+    if new_role == "admin":
+        new_role = Roles.ADMIN
+    elif new_role == "seller":
+        new_role = Roles.SELLER
+    else:
+        new_role = Roles.USER
+    # Validar que el nuevo rol sea válido
+    valid_roles = [Roles.USER, Roles.ADMIN, Roles.SELLER]
+    if new_role not in valid_roles:
+        logger.error(f"Invalid role: {new_role}")
+        return jsonify({"msg": f"Invalid role. Valid roles are: {valid_roles}"}), 400
+
+    # Cambiar el rol del usuario
+    user.role = new_role
+    db.session.commit()
+    logger.info(f"User {user.username} role changed to {new_role} by admin {current_user_id}")
+    return jsonify({"msg": f"User role updated to {new_role}"}), 200
+
+
 @admin_bp.route('/delete/<int:id>', methods=['DELETE'])
 @jwt_required()
 @role_required(Roles.ADMIN)
