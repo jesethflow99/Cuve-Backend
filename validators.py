@@ -16,7 +16,6 @@ def validate_password(password):
 def validate_phone(phone):
     if not re.match(r"^\+?\d{10,15}$", phone):
         raise ValidationError("El número de teléfono no es válido.")
-    # Check if the phone number is already in use
     existing_user = User.query.filter_by(phone=phone).first()
     if existing_user:
         raise ValidationError("El número de teléfono ya está en uso.")
@@ -24,7 +23,6 @@ def validate_phone(phone):
 def validate_email(email):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         raise ValidationError("El correo electrónico no es válido.")
-    # Check if the email is already in use
     existing_user = User.query.filter_by(email=email).first()
     if existing_user:
         raise ValidationError("El correo electrónico ya está en uso.")

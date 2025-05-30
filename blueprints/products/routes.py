@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
-from models import Product, db,Order,OrderItem,User,Roles, OrderItemSchema
-from schemas import ProductSchema
+from models import Product, db,Order,OrderItem,User,Roles, Category
+from schemas import ProductSchema,OrderItemSchema
 from flask_jwt_extended import get_jwt_identity
 
 
@@ -165,6 +165,39 @@ def  add_order():
     db.session.commit()
 
     return jsonify({"msg": "Order created successfully", "order_id": order.id}), 201
+  
+@product_bp.route('/categories', methods=['POST'])
+@jwt_required()
+def create_category():
+    # Verificar si el usuario tiene el rol adecuado
+    if not has_role([Roles.ADMIN]):
+        return jsonify({"msg": "Access forbidden"}), 403
+
+    # Obtener los datos del cuerpo de la solicitud
+    data = request.get_json()
+    name = data.get('name')
+    description = data.get('description')
+
+    # Validar los datos
+    if not name:
+        return jsonify({"msg": "Category name is required"}), 400
+
+    # Verificar si ya existe una categoría con el mismo nombre
+    if Category.query.filter_by(name=name).first():
+        return jsonify({"msg": "Category with this name already exists"}), 400
+
+    # Crear la nueva categoría
+    category = Category(name=name, description=description)
+    db.session.add(category)
+    db.session.commit()
+
+    return jsonify({"msg": "Category created successfully", "category": {"id": category.id, "name": category.name, "description": category.description}}), 201
     
-    
+@product_bp.route('/categories', methods=['GET'])
+@jwt_required()
+def get_categories():
+    categories = Category.query.all()
+    return jsonify([{"id": category.id, "name": category.name, "description": category.description} for category in categories]), 200
+
+
 blueprint = product_bp  

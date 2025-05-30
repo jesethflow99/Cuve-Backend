@@ -115,3 +115,50 @@ def test_get_products(client, user_access_token):
     assert all('description' in product for product in response.json)
     assert all('image_url' in product for product in response.json)
     assert all('category_id' in product for product in response.json)
+    
+def test_create_category(client, admin_access_token):
+    headers = {'Authorization': f'Bearer {admin_access_token}'}
+    data = {
+        "name": "New Category",
+        "description": "This is a new category for testing."
+    }
+    
+    # Enviar la solicitud POST para crear la categoría
+    response = client.post('/products/categories', json=data, headers=headers)
+    
+    # Verificar que la respuesta sea exitosa
+    assert response.status_code == 201
+    response_data = response.get_json()
+    assert response_data["msg"] == "Category created successfully"
+    assert response_data["category"]["name"] == data["name"]
+    assert response_data["category"]["description"] == data["description"]
+
+def test_create_category_duplicate_name(client, admin_access_token):
+    headers = {'Authorization': f'Bearer {admin_access_token}'}
+    data = {
+        "name": "Electronics",  # Ya existe en la base de datos
+        "description": "Duplicate category test."
+    }
+    
+    # Enviar la solicitud POST para crear una categoría duplicada
+    response = client.post('/products/categories', json=data, headers=headers)
+    
+    # Verificar que la respuesta indique un error de duplicado
+    assert response.status_code == 400
+    response_data = response.get_json()
+    assert response_data["msg"] == "Category with this name already exists"
+
+def test_create_category_unauthorized(client, user_access_token):
+    headers = {'Authorization': f'Bearer {user_access_token}'}
+    data = {
+        "name": "Unauthorized Category",
+        "description": "This should not be allowed."
+    }
+    
+    # Enviar la solicitud POST con un usuario no autorizado
+    response = client.post('/products/categories', json=data, headers=headers)
+    
+    # Verificar que la respuesta indique acceso prohibido
+    assert response.status_code == 403
+    response_data = response.get_json()
+    assert response_data["msg"] == "Access forbidden"
