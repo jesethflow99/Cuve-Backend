@@ -38,14 +38,14 @@ def get_product(product_id):
     return jsonify(product_schema.dump(product)), 200
 
 #get products by category
-@product_bp.route('/products/category/<string:category>', methods=['GET'])
+@product_bp.route('/categories/<int:category>', methods=['GET'])
 @jwt_required()
 def get_products_by_category(category):
-    products = Product.query.filter_by(category=category).all()
+    products = Product.query.filter_by(category_id=category).all()
     product_schema = ProductSchema(many=True)
     
     if not products:
-        return jsonify({"msg": "No products found in this category"}), 404
+        return []
     
     return jsonify(product_schema.dump(products)), 200
   
@@ -55,7 +55,7 @@ def get_products_by_category(category):
 def get_orders_by_user(id_user):
     order = Order.query.filter_by(user_id=id_user).first()
     if not order:
-        return jsonify({"msg": "No orders found for this user"}), 404
+        return []
     order_items = OrderItem.query.filter_by(order_id=order.id).all()
     order_item_schema = OrderItemSchema(many=True)
     return jsonify({
@@ -92,7 +92,7 @@ def create_product():
     return jsonify({"msg": "Error creating product", "error": str(e)}), 500
   
 # Update an existing product
-@product_bp.route('/products/<int:product_id>', methods=['PATCH'])
+@product_bp.route('/<int:product_id>', methods=['PATCH'])
 @jwt_required()
 def update_product(product_id):
   
@@ -113,14 +113,14 @@ def update_product(product_id):
   return jsonify(product_schema.dump(product)), 200
 
 # Delete a product
-@product_bp.route('/products/<int:product_id>', methods=['DELETE'])
+@product_bp.route('/<int:product_id>', methods=['DELETE'])
 @jwt_required()
 def delete_product(product_id):
   
-  if not any(role in [Roles.ADMIN, Roles.SELLER] for role in get_jwt_identity().get('roles', [])):
+  if not has_role([Roles.ADMIN, Roles.SELLER]):
     return jsonify({"msg": "Access forbidden"}), 403
   
-  product = Product.query.get_or_404(product_id)
+  product = db.session.get(Product,product_id)
   db.session.delete(product)
   db.session.commit()
 
@@ -198,6 +198,28 @@ def create_category():
 def get_categories():
     categories = Category.query.all()
     return jsonify([{"id": category.id, "name": category.name, "description": category.description} for category in categories]), 200
+
+
+@product_bp.route('/categories/<int:category_id>', methods=['DELETE'])
+@jwt_required()
+def delete_category(category_id):
+    # Verificar si el usuario tiene el rol adecuado
+    if not has_role([Roles.ADMIN]):
+        return jsonify({"msg": "Access forbidden"}), 403
+
+    # Buscar la categoría
+    category = Category.query.get(category_id)
+    if not category:
+        return jsonify({"msg": "Category not found"}), 404
+
+    try:
+        # Eliminar la categoría
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({"msg": "Category deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"msg": "Error deleting category", "error": str(e)}), 500
 
 
 blueprint = product_bp  

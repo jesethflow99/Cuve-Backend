@@ -47,6 +47,7 @@ class OrderItemSchema(ma.SQLAlchemyAutoSchema):
 class OrderSchema(ma.SQLAlchemyAutoSchema):
     order_items = ma.Nested(OrderItemSchema, many=True)
     class Meta:
+        
         model = Order
         load_instance = True
         include_fk = True
