@@ -23,7 +23,7 @@ def register():
     if errors:
         logger.error(f"Validation errors: {errors}")
 
-        return jsonify(errors), 400
+        return jsonify({"message":errors}), 401
 
 
     # Hashear la contraseña antes de cargar el modelo

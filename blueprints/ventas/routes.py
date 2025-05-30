@@ -117,9 +117,23 @@ def add_order_item(order_id):
         if not product:
             return jsonify({"msg": "Product not found"}), 404
 
-        # Crear el ítem de la orden
-        order_item = OrderItem(order_id=order_id, product_id=product_id, quantity=quantity)
-        db.session.add(order_item)
+        # Verificar si hay suficiente stock
+        if product.stock < quantity:
+            return jsonify({"msg": "Insufficient stock"}), 400
+
+        # Verificar si el producto ya está en la orden
+        order_item = OrderItem.query.filter_by(order_id=order_id, product_id=product_id).first()
+        if order_item:
+            # Si ya existe, aumentar la cantidad
+            order_item.quantity += quantity
+        else:
+            # Si no existe, crear un nuevo ítem
+            order_item = OrderItem(order_id=order_id, product_id=product_id, quantity=quantity)
+            db.session.add(order_item)
+
+        # Reducir el stock del producto
+        product.stock -= quantity
+
         db.session.commit()
 
         order_item_schema = OrderItemSchema()
